@@ -42,7 +42,7 @@ export class SQSService extends QueueService {
       const data = await this.sqsClient.send(command);
       if (data.Messages) {
         for (const message of data.Messages) {
-          this.logger.log(`Received message: ${message.Body}`);
+          this.logger.log(`Received message from SQS: ${message.Body}`);
           callback(message.Body);
           const deleteParams = {
             QueueUrl: this.queueUrl,

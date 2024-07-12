@@ -49,7 +49,7 @@ export class RabbitMQService extends QueueService {
   async subscribe(callback: (message: string) => void): Promise<void> {
     await this.channel.consume(this.queue, (msg) => {
       if (msg !== null) {
-        this.logger.log(`Received message: ${msg.content.toString()}`);
+        this.logger.log(`Received message from RabbitMQ: ${msg.content.toString()}`);
         callback(msg.content.toString());
         this.channel.ack(msg);
       }

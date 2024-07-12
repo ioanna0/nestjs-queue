@@ -56,3 +56,38 @@ docker-compose up --build
 docker-compose down
 docker-compose up --build
 ```
+
+## Testing
+
+### Environment Variables
+
+```
+QUEUE_PROVIDER=sqs # sqs | rabbitmq 
+SQS_ENDPOINT=http://localstack:4566
+SQS_REGION=us-east-1
+SQS_QUEUE_URL=http://localstack:4566/000000000000/nestjs-queue
+RABBITMQ_URL=amqp://rabbitmq:5672
+RABBITMQ_QUEUE=nestjs-queue
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+```
+### Steps
+Publishing: `POST` request to `http://localhost:3000/publish` with a JSON body `{ "message": "your message" }`.
+e.g
+```
+curl -X POST http://localhost:3000/publish -H "Content-Type: application/json" -d '{"message": "Hello World!"}'
+```
+
+Subscribing: `GET` request to `http://localhost:3000/subscribe`.
+e.g
+```
+curl http://localhost:3000/subscribe
+```
+
+The message will be displayed on the Docker console.
+
+e.g
+```
+app-1         | [Nest] 1  - {Timestamp}     LOG [RabbitMQService] Connected to RabbitMQ
+app-1         | [Nest] 1  - {Timestamp}     LOG [AppController] Published message: {Message}
+```

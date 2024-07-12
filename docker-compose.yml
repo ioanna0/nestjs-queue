@@ -1,16 +1,39 @@
 version: '3.9'
+
 services:
   app:
     build: .
     ports:
       - "3000:3000"
     environment:
-      - QUEUE_PROVIDER=rabbitmq
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - RABBITMQ_QUEUE=nestjs-queue
+      - QUEUE_PROVIDER=${QUEUE_PROVIDER}
+      - SQS_ENDPOINT=${SQS_ENDPOINT}
+      - SQS_REGION=${SQS_REGION}
+      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     depends_on:
-      rabbitmq:
-        condition: service_healthy
+      - localstack
+
+  localstack:
+    image: localstack/localstack
+    hostname: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - HOSTNAME_EXTERNAL=localstack
+    volumes:
+      - ./init-localstack.sh:/docker-entrypoint-initaws.d/init-localstack.sh
+      - ./entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health || exit 1"]
+      interval: 5s
+      retries: 20
 
   rabbitmq:
     image: rabbitmq:3-management
