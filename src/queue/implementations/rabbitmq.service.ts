@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as amqp from 'amqplib';
 import { QueueService } from '../queue.service';
@@ -8,6 +8,7 @@ export class RabbitMQService extends QueueService {
   private connection: amqp.Connection;
   private channel: amqp.Channel;
   private queue: string;
+  private readonly logger = new Logger(RabbitMQService.name);
 
   constructor(private configService: ConfigService) {
     super();
@@ -15,10 +16,30 @@ export class RabbitMQService extends QueueService {
   }
 
   async init() {
-    this.connection = await amqp.connect(this.configService.get<string>('queue.rabbitmq.url'));
-    this.channel = await this.connection.createChannel();
     this.queue = this.configService.get<string>('queue.rabbitmq.queue');
-    await this.channel.assertQueue(this.queue);
+    const url = this.configService.get<string>('queue.rabbitmq.url');
+    
+    await this.retryConnect(url);
+  }
+
+  async retryConnect(url: string, retries: number = 5): Promise<void> {
+    while (retries > 0) {
+      try {
+        this.connection = await amqp.connect(url);
+        this.channel = await this.connection.createChannel();
+        await this.channel.assertQueue(this.queue);
+        this.logger.log('Connected to RabbitMQ');
+        break;
+      } catch (error) {
+        this.logger.error('Failed to connect to RabbitMQ', error);
+        retries -= 1;
+        if (retries === 0) {
+          throw error;
+        }
+        this.logger.log(`Retrying to connect to RabbitMQ (${retries} retries left)...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+    }
   }
 
   async publish(message: string): Promise<void> {

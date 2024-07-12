@@ -47,3 +47,12 @@ docker-compose up --build
 - Publish a message using a `POST` request to `http://localhost:3000/publish` with a JSON body `{ "message": "your message" }`.
 - Subscribe to messages using a `GET` request to `http://localhost:3000/subscribe`.
 
+
+## Troubleshooting
+
+- If the Docker containers are not running, ensure that the ports `3000` and `6379` are not in use.
+- To restart the Docker containers, run:
+```
+docker-compose down
+docker-compose up --build
+```

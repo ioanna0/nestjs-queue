@@ -7,9 +7,10 @@ services:
     environment:
       - QUEUE_PROVIDER=rabbitmq
       - RABBITMQ_URL=amqp://rabbitmq:5672
-      - RABBITMQ_QUEUE=nextjs-queue
+      - RABBITMQ_QUEUE=nestjs-queue
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -19,3 +20,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
