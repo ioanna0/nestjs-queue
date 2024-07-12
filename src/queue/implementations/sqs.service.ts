@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
 import { QueueService } from '../queue.service';
@@ -7,18 +7,19 @@ import { QueueService } from '../queue.service';
 export class SQSService extends QueueService {
   private sqsClient: SQSClient;
   private queueUrl: string;
+  private readonly logger = new Logger(SQSService.name);
 
   constructor(private configService: ConfigService) {
     super();
     this.sqsClient = new SQSClient({
-      endpoint: configService.get<string>('queue.sqs.endpoint'),
-      region: configService.get<string>('queue.sqs.region'),
+      endpoint: configService.get<string>('SQS_ENDPOINT'),
+      region: configService.get<string>('SQS_REGION'),
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        accessKeyId: configService.get<string>('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: configService.get<string>('AWS_SECRET_ACCESS_KEY'),
       },
     });
-    this.queueUrl = configService.get<string>('queue.sqs.queueUrl');
+    this.queueUrl = configService.get<string>('SQS_QUEUE_URL');
   }
 
   async publish(message: string): Promise<void> {
@@ -41,6 +42,7 @@ export class SQSService extends QueueService {
       const data = await this.sqsClient.send(command);
       if (data.Messages) {
         for (const message of data.Messages) {
+          this.logger.log(`Received message: ${message.Body}`);
           callback(message.Body);
           const deleteParams = {
             QueueUrl: this.queueUrl,

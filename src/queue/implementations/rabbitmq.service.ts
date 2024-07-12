@@ -16,8 +16,8 @@ export class RabbitMQService extends QueueService {
   }
 
   async init() {
-    this.queue = this.configService.get<string>('queue.rabbitmq.queue');
-    const url = this.configService.get<string>('queue.rabbitmq.url');
+    this.queue = this.configService.get<string>('RABBITMQ_QUEUE');
+    const url = this.configService.get<string>('RABBITMQ_URL');
     
     await this.retryConnect(url);
   }
@@ -49,6 +49,7 @@ export class RabbitMQService extends QueueService {
   async subscribe(callback: (message: string) => void): Promise<void> {
     await this.channel.consume(this.queue, (msg) => {
       if (msg !== null) {
+        this.logger.log(`Received message: ${msg.content.toString()}`);
         callback(msg.content.toString());
         this.channel.ack(msg);
       }
