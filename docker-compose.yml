@@ -19,21 +19,12 @@ services:
 
   localstack:
     image: localstack/localstack
-    hostname: localstack
     ports:
-      - "4566:4566"
+      - "4567:4566"
+      - "4571:4571"
     environment:
       - SERVICES=sqs
       - DEBUG=1
-      - HOSTNAME_EXTERNAL=localstack
-    volumes:
-      - ./init-localstack.sh:/docker-entrypoint-initaws.d/init-localstack.sh
-      - ./entrypoint.sh:/entrypoint.sh
-    entrypoint: ["/bin/bash", "/entrypoint.sh"]
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health || exit 1"]
-      interval: 5s
-      retries: 20
 
   rabbitmq:
     image: rabbitmq:3-management

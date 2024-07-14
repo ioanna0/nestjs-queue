@@ -9,10 +9,10 @@ export class RabbitMQService extends QueueService {
   private channel: amqp.Channel;
   private queue: string;
   private readonly logger = new Logger(RabbitMQService.name);
+  private initialized = false;
 
   constructor(private configService: ConfigService) {
     super();
-    this.init();
   }
 
   async init() {
@@ -20,6 +20,7 @@ export class RabbitMQService extends QueueService {
     const url = this.configService.get<string>('RABBITMQ_URL');
     
     await this.retryConnect(url);
+    this.initialized = true;
   }
 
   async retryConnect(url: string, retries: number = 5): Promise<void> {
@@ -43,10 +44,16 @@ export class RabbitMQService extends QueueService {
   }
 
   async publish(message: string): Promise<void> {
+    if (!this.initialized) {
+      await this.init();
+    }
     await this.channel.sendToQueue(this.queue, Buffer.from(message));
   }
 
   async subscribe(callback: (message: string) => void): Promise<void> {
+    if (!this.initialized) {
+      await this.init();
+    }
     await this.channel.consume(this.queue, (msg) => {
       if (msg !== null) {
         this.logger.log(`Received message from RabbitMQ: ${msg.content.toString()}`);

@@ -30,14 +30,16 @@ export class SQSService extends QueueService {
     await this.sqsClient.send(command);
   }
 
-  async subscribe(callback: (message: string) => void): Promise<void> {
+  async subscribe(callback: (message: string) => void, iterations: number = Infinity): Promise<void> {
     const params = {
       QueueUrl: this.queueUrl,
       MaxNumberOfMessages: 10,
       WaitTimeSeconds: 20,
     };
 
-    while (true) {
+    let count = 0;
+    while (count < iterations) {
+      count++;
       const command = new ReceiveMessageCommand(params);
       const data = await this.sqsClient.send(command);
       if (data.Messages) {
