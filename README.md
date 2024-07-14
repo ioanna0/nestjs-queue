@@ -38,6 +38,8 @@ $ npm run test:cov
 
 - Ensure Docker and Docker Compose are installed.
 - Create .env file with the necessary configurations.
+- Make sure the initlocalstack.sh is executable
+  - `chmod +x init-localstack.sh`
 - Build and run the Docker containers:
 ```
 docker-compose up --build

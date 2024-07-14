@@ -20,11 +20,13 @@ services:
   localstack:
     image: localstack/localstack
     ports:
-      - "4567:4566"
+      - "4566:4566"
       - "4571:4571"
     environment:
       - SERVICES=sqs
       - DEBUG=1
+    volumes:
+      - ./init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh
 
   rabbitmq:
     image: rabbitmq:3-management
